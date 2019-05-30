@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cassert>
+#include <assert.h>
 
 #include "fixnum/warp_fixnum.cu"
 #include "array/fixnum_array.h"
@@ -69,19 +70,26 @@ struct encrypt_decrypt {
 	__device__ void operator()(fixnum &r, fixnum in1, fixnum in2, fixnum in3, fixnum in4) {
 
         fixnum n;
-        //fixnum::mul_wide(nhi, nlo, in1, in2);
         fixnum::mul_lo(n, in1, in2);
-        //clock_t c = clock();
         paillier_encrypt<fixnum> enc(n);
         paillier_decrypt<fixnum> dec(in1, in2);
         enc(r, in3, in4);
-        //tenc = clock() - c;
         fixnum rr;
 		dec(rr, fixnum::zero(), r);
         r = rr;
-        //tdec = clock() - tenc;
 	}
 };
+
+template< typename fixnum >
+struct cmp {
+    __device__ void operator()(fixnum x, fixnum y){
+
+        int result = fixnum::cmp(x, y);
+        assert(result == 0);
+    }
+
+};
+
 
 template< typename modnum >
 struct my_modexp {
@@ -170,7 +178,7 @@ void my_bench(int nelts)  {
     typedef fixnum_array<fixnum> fixnum_array;
     
     uint8_t *input1, *input2, *input3, *input4;
-    fixnum_array *res, *in1, *in2, *in3, *in4;
+    fixnum_array *res, *output, *in1, *in2, *in3, *in4;
 
 
     input1 = new uint8_t[fn_bytes * nelts];
@@ -191,6 +199,7 @@ void my_bench(int nelts)  {
     in3 = fixnum_array::create(input3, fn_bytes * nelts, fn_bytes);
     in4 = fixnum_array::create(input4, fn_bytes * nelts, fn_bytes);
     res = fixnum_array::create(nelts);
+    output = fixnum_array::create(nelts);
 
    
 
@@ -209,10 +218,12 @@ void my_bench(int nelts)  {
     printf("enc   %4d   %3d    %6.1f   %7.3f  %12.1f\n",
            fixnum::BITS, fixnum::digit::BITS, total_MiB,
            1/secinv, nelts * 1e-3 * secinv);
+
     
+  
     c = clock();
     //fixnum_array::template map<Func>(res, in1, in2, in3, in4);
-    fixnum_array::template map<decrypt>(res, in1, in2, in3, in4);
+    fixnum_array::template map<decrypt>(output, in1, in2, in3, in4);
     c = clock() - c;
 
     secinv = (double)CLOCKS_PER_SEC / c;
@@ -220,7 +231,11 @@ void my_bench(int nelts)  {
     printf("dec   %4d   %3d    %6.1f   %7.3f  %12.1f\n",
            fixnum::BITS, fixnum::digit::BITS, total_MiB,
            1/secinv, nelts * 1e-3 * secinv);
-    
+
+
+    //bool *in_out_same = new bool[nelts];    
+    fixnum_array::template map<cmp>(res, output);
+    cerr << cudaGetErrorString(cudaPeekAtLastError()) << endl;
 
 
     
@@ -261,6 +276,7 @@ using multi_modexp_redc = my_multi_modexp< modnum_monty_redc<fixnum> >;
 
 template< typename fixnum >
 using multi_modexp_cios = my_multi_modexp< modnum_monty_cios<fixnum> >;
+
 
 int main(int argc, char *argv[]) {
     long m = 1;
