@@ -34,8 +34,9 @@ public:
     template< template <typename> class Func, typename... Args >
     static void map(Args... args);
 
+    fixnum* ptr;
+
 private:
-    fixnum *ptr;
     int nelts;
 
     fixnum_array() {  }

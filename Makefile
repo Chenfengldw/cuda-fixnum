@@ -1,5 +1,6 @@
+NVCC=/usr/local/cuda-9.0/bin/nvcc
 CXX ?= g++
-GENCODES ?= 50
+GENCODES ?= 61
 
 INCLUDE_DIRS = -I./src
 NVCC_FLAGS = -ccbin $(CXX) -std=c++11 -Xcompiler -Wall,-Wextra
@@ -13,15 +14,20 @@ all:
 	@echo "Please run 'make check' or 'make bench'."
 
 tests/test-suite: tests/test-suite.cu
-	nvcc $(NVCC_TEST_FLAGS) $(NVCC_FLAGS) $(GENCODES:%=--gpu-architecture=compute_%) $(GENCODES:%=--gpu-code=sm_%) $(INCLUDE_DIRS) $(NVCC_LIBS) $(NVCC_TEST_LIBS) -o $@ $<
+	$(NVCC) $(NVCC_TEST_FLAGS) $(NVCC_FLAGS) $(INCLUDE_DIRS) $(NVCC_LIBS) $(NVCC_TEST_LIBS) -o $@ $<
+	#$(NVCC) $(NVCC_TEST_FLAGS) $(NVCC_FLAGS) $(GENCODES:%=--gpu-architecture=compute_%) $(GENCODES:%=--gpu-code=sm_%) $(INCLUDE_DIRS) $(NVCC_LIBS) $(NVCC_TEST_LIBS) -o $@ $<
 
 check: tests/test-suite
 	@./tests/test-suite
 
 bench/bench: bench/bench.cu
-	nvcc $(NVCC_OPT_FLAGS) $(NVCC_FLAGS) $(GENCODES:%=--gpu-architecture=compute_%) $(GENCODES:%=--gpu-code=sm_%) $(INCLUDE_DIRS) $(NVCC_LIBS) -o $@ $<
+	#$(NVCC) $(NVCC_OPT_FLAGS) $(NVCC_FLAGS) $(INCLUDE_DIRS) $(NVCC_LIBS) -o $@ $<
+	$(NVCC) $(NVCC_OPT_FLAGS) $(NVCC_FLAGS) $(GENCODES:%=--gpu-architecture=compute_%) $(GENCODES:%=--gpu-code=sm_%) $(INCLUDE_DIRS) $(NVCC_LIBS) -o $@ $<
 
 bench: bench/bench
+
+paillier: paillier_test.cu
+	$(NVCC) $(NVCC_OPT_FLAGS) $(NVCC_FLAGS) $(GENCODES:%=--gpu-architecture=compute_%) $(GENCODES:%=--gpu-code=sm_%) $(INCLUDE_DIRS) $(NVCC_LIBS) -o $@ $<
 
 .PHONY: clean
 clean:

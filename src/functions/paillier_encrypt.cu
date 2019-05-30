@@ -1,5 +1,6 @@
 #pragma once
 
+#include "functions/modexp.cu"
 #include "functions/quorem_preinv.cu"
 #include "functions/multi_modexp.cu"
 #include "modnum/modnum_monty_cios.cu"

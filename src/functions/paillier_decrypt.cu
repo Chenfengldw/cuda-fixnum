@@ -2,6 +2,7 @@
 
 #include "functions/quorem_preinv.cu"
 #include "functions/divexact.cu"
+#include "functions/modexp.cu"
 #include "functions/chinese.cu"
 #include "functions/multi_modexp.cu"
 #include "modnum/modnum_monty_cios.cu"
@@ -92,7 +93,8 @@ private:
 
     // Modexp for x |--> x^(p - 1) (mod p^2)
     typedef modnum_monty_cios<fixnum> modnum;
-    modexp<modnum> pow;
+	modexp<modnum> pow;
+	//modexp< fixnum, modnum_monty_cios<fixnum> > pow;
 
     // TODO: It is flipping stupid that these are necessary.
     __device__ fixnum square(fixnum p) {
