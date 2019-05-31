@@ -101,13 +101,13 @@ template< typename fixnum >
 struct cmp {
     __device__ void operator()(fixnum x, fixnum y){
         int result = fixnum::cmp(x, y);
-        //assert(result == 0);
+        assert(result == 0);
     }
 };
 
 
-// fn_bytes is how many bytes a single element has, and is used for key size here.
-// word_fixnum type size, which is also word_fixnum::BYTES is used for digit size, content to be encrytped.
+// fn_bytes is the size of fixnum, which should be able to contain n^2 which is 4 times the size of p and q.
+// data_bytes is used for data size, content to be encrytped.
 // nelts is number of elements.
 template<int fn_bytes, int data_bytes, typename word_fixnum>
 void my_bench_paillier(int nelts, const char* filename)  {
@@ -116,8 +116,9 @@ void my_bench_paillier(int nelts, const char* filename)  {
     typedef fixnum_array<fixnum> fixnum_array;
 
     uint8_t *input1, *input2, *input3, *input4;
-    fixnum_array *cipher, *output, *in1, *in2, *in3, *in4, *n, *res;
+    fixnum_array *cipher, *in1, *in2, *in3, *in4, *n, *res;
     
+    // half_fn_bytes is the actual size of p in byte
     int half_fn_bytes = fn_bytes / 4;
 
     ifstream data(filename, ios_base::binary);
@@ -160,7 +161,7 @@ void my_bench_paillier(int nelts, const char* filename)  {
     in3 = fixnum_array::create(input3, data_bytes * nelts, data_bytes);
     in4 = fixnum_array::create(input4, half_fn_bytes * nelts, half_fn_bytes);
     cipher = fixnum_array::create(nelts);        
-    output = fixnum_array::create(nelts);
+    //output = fixnum_array::create(nelts);
     n = fixnum_array::create(nelts);
     res = fixnum_array::create(nelts);
 
@@ -175,6 +176,7 @@ void my_bench_paillier(int nelts, const char* filename)  {
 
     fixnum_array::template map<mul_lo>(n, in1, in2);    
 
+    //cout << "txt before encrypt" << in3 << endl;
     clock_t c = clock();
     fixnum_array::template map<pencrypt>(cipher, n, in3, in4);    
     c = clock() - c;
@@ -182,8 +184,8 @@ void my_bench_paillier(int nelts, const char* filename)  {
     double secinv = (double)CLOCKS_PER_SEC / c;
     double total_MiB = fixnum::BYTES * (double)nelts / (1 << 20);
     
-    printf("enc    %4d   %3d    %6.1f   %7.3f  %12.1f\n",
-           fixnum::BITS, fixnum::digit::BITS, total_MiB,
+    printf("enc    %4d   %3d    %6.1f   %7.3f  %12.3f\n",
+           half_fn_bytes*8, data_bytes*8, total_MiB,
            1/secinv, nelts * 1e-3 * secinv);
 
   
@@ -191,12 +193,17 @@ void my_bench_paillier(int nelts, const char* filename)  {
     fixnum_array::template map<pdecrypt_no_check>(res, cipher, in1, in2);
     c = clock() - c;
 
+    
     secinv = (double)CLOCKS_PER_SEC / c;
     total_MiB = fixnum::BYTES * (double)nelts / (1 << 20);
 
-    printf("dec    %4d   %3d    %6.1f   %7.3f  %12.1f\n",
-           fixnum::BITS, fixnum::digit::BITS, total_MiB,
+    printf("dec    %4d   %3d    %6.1f   %7.3f  %12.3f\n",
+           half_fn_bytes*8, data_bytes*8, total_MiB,
            1/secinv, nelts * 1e-3 * secinv);
+    
+    //cout << "txt before encrypt" << in3 << endl;
+    //cout << "txt after encrypt" << cipher << endl;
+    //cout << "txt after decrypt" << res << endl;
 
     /*cout << "p: " << in1 << endl;
     cout << "q: " << in2 << endl;
@@ -216,24 +223,26 @@ void my_bench_paillier(int nelts, const char* filename)  {
 
     delete in1; delete in2; delete in3; delete in4;
     delete input1; delete input2; delete input3; delete input4;
-    delete cipher;delete output;delete n;delete res;
+    delete cipher;delete n;delete res;
 
 }
 
 void my_bench_func(const char *fn_name, int nelts) {
     printf("Function: %s, #elts: %d\n", fn_name, nelts);
-    printf("func  fixnum digit  total data   time       Kops/s\n");
-    printf("       bits  bits     (MiB)    (seconds)\n"); 
+    printf("func  key_size  data_size  total data   time       Kops/s\n");
+    printf("       bits       bits      (MiB)     (seconds)\n"); 
 
     cout<<endl;
-    /**my_bench_paillier<16, 4, u32_fixnum>(nelts,"./generated_keys/key_128");
+
+    //here key_128 means the file size is 128, which contains p and q, so p q size is half of 128
+    my_bench_paillier<16, 4, u32_fixnum>(nelts,"./generated_keys/key_128");
     my_bench_paillier<32, 4, u32_fixnum>(nelts,"./generated_keys/key_256");
     my_bench_paillier<64, 4, u32_fixnum>(nelts,"./generated_keys/key_512");
-    my_bench_paillier<128,4, u32_fixnum>(nelts,"./generated_keys/key_1024");**/
-    my_bench_paillier<32, 4, u64_fixnum>(nelts,"./generated_keys/key_128");
-    my_bench_paillier<64, 4, u64_fixnum>(nelts,"./generated_keys/key_256");
-    my_bench_paillier<128, 4, u64_fixnum>(nelts,"./generated_keys/key_512");
-    my_bench_paillier<256, 4, u64_fixnum>(nelts,"./generated_keys/key_1024");
+    my_bench_paillier<128,4, u32_fixnum>(nelts,"./generated_keys/key_1024");
+    my_bench_paillier<32, 8, u64_fixnum>(nelts,"./generated_keys/key_128");
+    my_bench_paillier<64, 8, u64_fixnum>(nelts,"./generated_keys/key_256");
+    my_bench_paillier<128, 8, u64_fixnum>(nelts,"./generated_keys/key_512");
+    my_bench_paillier<256, 8, u64_fixnum>(nelts,"./generated_keys/key_1024");
     puts("");
 }
 
