@@ -19,7 +19,7 @@ public:
      */
     __device__ void operator()(fixnum &ctxt, fixnum m, fixnum r) const {
         // TODO: test this properly
-        //assert(fixnum::slot_layout::laneIdx() < fixnum::SLOT_WIDTH/2 || m == 0);
+        assert(fixnum::slot_layout::laneIdx() < fixnum::SLOT_WIDTH/2 || m == 0);
         fixnum::mul_lo(m, m, n);
         fixnum::incr_cy(m);
         pow(r, r);
