@@ -185,7 +185,7 @@ void my_bench_paillier(int nelts, const char* filename)  {
     double total_MiB = fixnum::BYTES * (double)nelts / (1 << 20);
     
     printf("enc    %4d   %3d    %6.1f   %7.3f  %12.3f\n",
-           half_fn_bytes*8, data_bytes*8, total_MiB,
+           half_fn_bytes*16, data_bytes*8, total_MiB,
            1/secinv, nelts * 1e-3 * secinv);
 
   
@@ -198,7 +198,7 @@ void my_bench_paillier(int nelts, const char* filename)  {
     total_MiB = fixnum::BYTES * (double)nelts / (1 << 20);
 
     printf("dec    %4d   %3d    %6.1f   %7.3f  %12.3f\n",
-           half_fn_bytes*8, data_bytes*8, total_MiB,
+           half_fn_bytes*16, data_bytes*8, total_MiB,
            1/secinv, nelts * 1e-3 * secinv);
     
     //cout << "txt before encrypt" << in3 << endl;
@@ -235,14 +235,23 @@ void my_bench_func(const char *fn_name, int nelts) {
     cout<<endl;
 
     //here key_128 means the file size is 128, which contains p and q, so p q size is half of 128
-    my_bench_paillier<16, 4, u32_fixnum>(nelts,"./generated_keys/key_128");
-    my_bench_paillier<32, 4, u32_fixnum>(nelts,"./generated_keys/key_256");
-    my_bench_paillier<64, 4, u32_fixnum>(nelts,"./generated_keys/key_512");
-    my_bench_paillier<128,4, u32_fixnum>(nelts,"./generated_keys/key_1024");
+
+    my_bench_paillier<8, 4, u64_fixnum>(nelts,"./generated_keys/key_32");
+    my_bench_paillier<16, 4, u64_fixnum>(nelts,"./generated_keys/key_64");
+    my_bench_paillier<32, 4, u64_fixnum>(nelts,"./generated_keys/key_128");
+    my_bench_paillier<64, 4, u64_fixnum>(nelts,"./generated_keys/key_256");
+    my_bench_paillier<128, 4, u64_fixnum>(nelts,"./generated_keys/key_512");
+    my_bench_paillier<256,4, u64_fixnum>(nelts,"./generated_keys/key_1024");
+    //my_bench_paillier<512,4, u32_fixnum>(nelts,"./generated_keys/key_2048"); 
+    //my_bench_paillier<1024,4, u32_fixnum>(nelts,"./generated_keys/key_4096");
+    my_bench_paillier<8, 8, u64_fixnum>(nelts,"./generated_keys/key_32");
+    my_bench_paillier<16, 8, u64_fixnum>(nelts,"./generated_keys/key_64");
     my_bench_paillier<32, 8, u64_fixnum>(nelts,"./generated_keys/key_128");
     my_bench_paillier<64, 8, u64_fixnum>(nelts,"./generated_keys/key_256");
     my_bench_paillier<128, 8, u64_fixnum>(nelts,"./generated_keys/key_512");
     my_bench_paillier<256, 8, u64_fixnum>(nelts,"./generated_keys/key_1024");
+    //my_bench_paillier<512, 8, u64_fixnum>(nelts,"./generated_keys/key_2048");
+    //my_bench_paillier<1024, 8, u64_fixnum>(nelts,"./generated_keys/key_4096");
     puts("");
 }
 

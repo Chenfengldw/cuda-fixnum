@@ -62,7 +62,7 @@ def save_bytes_to_file(data,path):
     f.close()
 
 
-key_sizes = [128, 256, 512, 1024, 2048]
+key_sizes = [32,64,128, 256, 512, 1024,]
 snap_dir = './generated_keys/'
 
 if not osp.exists(snap_dir):
