@@ -301,5 +301,4 @@ fixnum_array<fixnum>::map(Args... args) {
         cuda_device_synchronize();
     }
 }
-
 } // End namespace cuFIXNUM
