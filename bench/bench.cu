@@ -140,7 +140,7 @@ void my_bench_paillier(int nelts, const char* filename)  {
     typedef fixnum_array<fixnum> fixnum_array;
 
     uint8_t *input1, *input2, *input3, *input4;
-    fixnum_array *cipher,*cipher2,*cipher3, *output, *in1, *in2, *in3, *in4, *p_arr,*q_arr,*n_arr, *res,*res2;
+    fixnum_array *cipher,*cipher2, *output, *in1, *in2, *in3, *in4, *p_arr,*q_arr,*n_arr, *res,*res2;
     
     int half_fn_bytes = fn_bytes / 4;
 
@@ -184,8 +184,6 @@ void my_bench_paillier(int nelts, const char* filename)  {
 
     p_arr = fixnum_array::create(p, half_fn_bytes, half_fn_bytes);
     q_arr = fixnum_array::create(q, half_fn_bytes, half_fn_bytes);   
-    
-    my_paillier_decrypt<fixnum> my_decrypt(p_arr,q_arr);
 
     p_arr = p_arr->repeat(nelts);
     q_arr = q_arr->repeat(nelts);
@@ -203,8 +201,6 @@ void my_bench_paillier(int nelts, const char* filename)  {
     
     cipher2 = fixnum_array::create(nelts);       
     res2 = fixnum_array::create(nelts);
-
-    cipher3 = fixnum_array::create(nelts);
 
 
     if (nelts == 0) {
@@ -252,7 +248,7 @@ void my_bench_paillier(int nelts, const char* filename)  {
     
 
     c = clock();    
-    fixnum_array::template map<my_paillier_decrypt>(my_decrypt,res,output);
+    fixnum_array::template map<pdecrypt_no_check>(res,output,p_arr,q_arr);
     c = clock() - c;
 
     secinv = (double)CLOCKS_PER_SEC / c;
@@ -263,8 +259,7 @@ void my_bench_paillier(int nelts, const char* filename)  {
            1/secinv, nelts * 1e-3 * secinv);
 
 
-    fixnum_array::template map<add>(res2,in1,in3);
-    fixnum_array::template map<pencrypt>(cipher3,n_arr,res2,in2);    
+    fixnum_array::template map<add>(res2,in1,in3); 
 
     /*cout << "p: " << p_arr << endl;
     cout << "q: " << q_arr << endl;    
@@ -273,7 +268,6 @@ void my_bench_paillier(int nelts, const char* filename)  {
     cout << "encrypted 1: " << cipher <<endl;  
     cout << "encrypted 2: " << cipher2 <<endl;  
     cout << "add result: " << output <<endl;
-    cout << "add result2: " << cipher3 <<endl;
     cout << "decrypted: " << res <<endl;
     cout << "for check: " << res2 <<endl;*/
     
